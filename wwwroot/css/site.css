@@ -1,0 +1,44 @@
+/* Keep the forms in the left/right columns visible while scrolling tables.
+   Uses a safe offset so it stays below the navbar/header. Adjust as needed. */
+:root {
+    --lf-sticky-offset: 72px; /* header height */
+}
+
+@media (min-width: 992px) {
+    .lf-sticky {
+        position: sticky; /* modern browsers */
+        position: -webkit-sticky; /* Safari */
+        top: var(--lf-sticky-offset);
+        z-index: 1010; /* above table headers */
+    }
+}
+
+/* Optional helper if you add it to the row wrapper */
+.lf-two-col {
+    align-items: flex-start;
+}
+
+/* Small, subtle "+who/when" badges */
+.who-when {
+    font-size: 0.75rem;
+    opacity: 0.85;
+}
+
+/* Keep description cells from blowing out the layout */
+.table .text-truncate {
+    max-width: 16rem;
+}
+
+/* Minor quality-of-life tweaks (safe to keep) */
+html {
+    min-height: 100%;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.table-responsive {
+    overflow-y: auto;
+}

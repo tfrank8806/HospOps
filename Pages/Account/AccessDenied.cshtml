@@ -1,0 +1,10 @@
+﻿@page
+@model Microsoft.AspNetCore.Mvc.RazorPages.PageModel
+@{
+    ViewData["Title"] = "Access denied";
+}
+<div class="alert alert-danger mt-4">
+    <h5 class="alert-heading">Access denied</h5>
+    <p>You do not have permission to access this resource.</p>
+    <a asp-page="/Index" class="btn btn-outline-secondary">Back to Home</a>
+</div>

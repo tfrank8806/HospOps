@@ -1,0 +1,10 @@
+﻿@page
+@model HospOps.Pages.Account.LogoutModel
+@{
+    ViewData["Title"] = "Logout";
+}
+<form method="post" class="mt-4">
+    <p>Are you sure you want to sign out?</p>
+    <button type="submit" class="btn btn-warning">Sign out</button>
+    <a asp-page="/Index" class="btn btn-link">Cancel</a>
+</form>

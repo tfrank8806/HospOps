@@ -1,0 +1,180 @@
+﻿@page
+@model HospOps.Pages.LostFound.IndexModel
+@{
+    ViewData["Title"] = "Lost & Found";
+}
+<h2 class="mb-3">Lost &amp; Found</h2>
+
+<div class="row g-4">
+    <!-- Lost -->
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Log Lost Item</h5>
+                <form method="post" asp-page-handler="CreateLost">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-2">
+                        <label asp-for="NewLost.LostLocation" class="form-label"></label>
+                        <input asp-for="NewLost.LostLocation" class="form-control" />
+                        <span asp-validation-for="NewLost.LostLocation" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <label asp-for="NewLost.GuestName" class="form-label"></label>
+                            <input asp-for="NewLost.GuestName" class="form-control" />
+                            <span asp-validation-for="NewLost.GuestName" class="text-danger"></span>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label asp-for="NewLost.DateReportedLost" class="form-label"></label>
+                            <input asp-for="NewLost.DateReportedLost" type="date" class="form-control" />
+                            <span asp-validation-for="NewLost.DateReportedLost" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewLost.Description" class="form-label"></label>
+                        <textarea asp-for="NewLost.Description" rows="4" class="form-control"></textarea>
+                        <span asp-validation-for="NewLost.Description" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Add Lost</button>
+                </form>
+            </div>
+        </div>
+
+        <h6 class="mt-4 mb-2">Recent Lost</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Guest</th>
+                        <th>Description</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Lost.Count == 0)
+                    {
+                        <tr><td colspan="5"><div class="alert alert-info m-0">No lost items logged.</div></td></tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.Lost)
+                        {
+                            <tr>
+                                <td>@item.DateReportedLost.ToLocalTime().ToString("MM/dd/yy")</td>
+                                <td>@item.LostLocation</td>
+                                <td>@item.GuestName</td>
+                                <td class="small">@item.Description</td>
+                                <td class="text-end">
+                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <form method="post" asp-page-handler="DeleteLost" asp-route-id="@item.Id" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Delete this lost item?');">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Found -->
+    <div class="col-12 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Log Found Item</h5>
+                <form method="post" asp-page-handler="CreateFound">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="mb-2">
+                        <label asp-for="NewFound.FoundLocation" class="form-label"></label>
+                        <input asp-for="NewFound.FoundLocation" class="form-control" />
+                        <span asp-validation-for="NewFound.FoundLocation" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <label asp-for="NewFound.FoundBy" class="form-label"></label>
+                            <input asp-for="NewFound.FoundBy" class="form-control" />
+                            <span asp-validation-for="NewFound.FoundBy" class="text-danger"></span>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <label asp-for="NewFound.DateFound" class="form-label"></label>
+                            <input asp-for="NewFound.DateFound" type="date" class="form-control" />
+                            <span asp-validation-for="NewFound.DateFound" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewFound.Description" class="form-label"></label>
+                        <textarea asp-for="NewFound.Description" rows="4" class="form-control"></textarea>
+                        <span asp-validation-for="NewFound.Description" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Add Found</button>
+                </form>
+            </div>
+        </div>
+
+        <h6 class="mt-4 mb-2">Recent Found</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Found By</th>
+                        <th>Description</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Found.Count == 0)
+                    {
+                        <tr><td colspan="5"><div class="alert alert-info m-0">No found items logged.</div></td></tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model.Found)
+                        {
+                            <tr>
+                                <td>@item.DateFound.ToLocalTime().ToString("MM/dd/yy")</td>
+                                <td>@item.FoundLocation</td>
+                                <td>@item.FoundBy</td>
+                                <td class="small">@item.Description</td>
+                                <td class="text-end">
+                                    <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <form method="post" asp-page-handler="DeleteFound" asp-route-id="@item.Id" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Delete this found item?');">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

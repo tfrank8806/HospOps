@@ -1,0 +1,35 @@
+﻿@page "{id:int}"
+@model HospOps.Pages.Logbook.DetailsModel
+@{
+    ViewData["Title"] = "Log Details";
+}
+
+<h2 class="mb-3">Log Entry</h2>
+
+<dl class="row">
+    <dt class="col-sm-3">Date</dt>
+    <dd class="col-sm-9">@Model.Entry.Date.ToString("yyyy-MM-dd")</dd>
+
+    <dt class="col-sm-3">Department</dt>
+    <dd class="col-sm-9">@Model.Entry.Department</dd>
+
+    <!-- SHIFT REMOVED -->
+
+    <dt class="col-sm-3">Severity</dt>
+    <dd class="col-sm-9">@Model.Entry.Severity</dd>
+
+    <dt class="col-sm-3">Title</dt>
+    <dd class="col-sm-9">@Model.Entry.Title</dd>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Entry.Notes))
+    {
+        <dt class="col-sm-3">Notes</dt>
+        <dd class="col-sm-9">@Model.Entry.Notes</dd>
+    }
+
+    <dt class="col-sm-3">Created</dt>
+    <dd class="col-sm-9">@Model.Entry.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</dd>
+</dl>
+
+<a asp-page="./Index" class="btn btn-outline-secondary">Back</a>
+<a asp-page="./Edit" asp-route-id="@Model.Entry.Id" class="btn btn-primary">Edit</a>

@@ -1,0 +1,93 @@
+﻿@page
+@model HospOps.Pages.PassOn.IndexModel
+@{
+    ViewData["Title"] = "Pass On";
+}
+
+<h2 class="mb-3">Pass On</h2>
+<div class="row g-4">
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">New Pass On</h5>
+                <form method="post" asp-page-handler="Create">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="mb-2">
+                        <label asp-for="NewNote.Date" class="form-label"></label>
+                        <input asp-for="NewNote.Date" type="date" class="form-control" />
+                        <span asp-validation-for="NewNote.Date" class="text-danger"></span>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="NewNote.Department" class="form-label"></label>
+                        <select asp-for="NewNote.Department" class="form-select" asp-items="Html.GetEnumSelectList<HospOps.Models.Department>()"></select>
+                        <span asp-validation-for="NewNote.Department" class="text-danger"></span>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="NewNote.Title" class="form-label"></label>
+                        <input asp-for="NewNote.Title" class="form-control" />
+                        <span asp-validation-for="NewNote.Title" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewNote.Message" class="form-label"></label>
+                        <textarea asp-for="NewNote.Message" rows="5" class="form-control"></textarea>
+                        <span asp-validation-for="NewNote.Message" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-success">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-8">
+        <h5 class="mb-2">Recent Pass On Notes</h5>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th> Date </th>
+                        <th> Dept </th>
+                        <th> Title </th>
+                        <th> By </th>
+                        <th> Created </th>
+                        <th class="text-end"> Actions </th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if(Model.Notes.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6">
+                            <div class="alert alert-info m-0">No pass on notes yet.</div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var n in Model.Notes)
+                    {
+                        <tr>
+                            <td>@n.Date.ToLocalTime().ToString("MM/dd/yy")</td>
+                            <td>@n.Department</td>
+                            <td>
+                                <div class="fw-semibold">@n.Title</div>
+                                <div class="small text-muted">@n.Message</div>
+                            </td>
+                            <td>@(string.IsNullOrWhiteSpace(n.CreatedBy) ? "—" : n.CreatedBy)</td>
+                            <td>@n.CreatedAt.ToLocalTime().ToString("MM/dd/yy HH:mm")</td>
+                            <td class="text-end">
+                                @if(User.IsInRole("Admin"))
+                                {
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@n.Id" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this Pass On note?');">Delete</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

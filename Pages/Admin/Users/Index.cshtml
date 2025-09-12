@@ -1,0 +1,65 @@
+﻿@page
+@model HospOps.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<h2 class="mb-3">Users</h2>
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>UserName</th>
+                <th>Email</th>
+                <th>Confirmed</th>
+                <th>Admin</th>
+                <th>Active</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model.Users)
+            {
+                <tr>
+                    <td>@u.UserName</td>
+                    <td>@u.Email</td>
+                    <td>@u.EmailConfirmed</td>
+                    <td>
+                        <form method="post" asp-page-handler="ToggleAdmin" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <input type="hidden" name="makeAdmin" value="@(!u.IsAdmin)" />
+                            <button type="submit" class="btn btn-sm @(u.IsAdmin ? "btn-success" : "btn-outline-secondary")">
+                                @(u.IsAdmin ? "Admin" : "Make Admin")
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="SetActive" class="d-inline">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <input type="hidden" name="active" value="@(!u.IsActive)" />
+                            <button type="submit" class="btn btn-sm @(u.IsActive ? "btn-success" : "btn-outline-secondary")">
+                                @(u.IsActive ? "Active" : "Activate")
+                            </button>
+                        </form>
+                    </td>
+                    <td class="text-end">
+                        <form method="post" asp-page-handler="ResetPassword" class="d-inline" onsubmit="return confirm('Reset password to a new value?');">
+                            <input type="hidden" name="id" value="@u.Id" />
+                            <input type="password" name="newPassword" class="form-control d-inline w-auto" placeholder="New password" />
+                            <button type="submit" class="btn btn-sm btn-warning">Reset</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

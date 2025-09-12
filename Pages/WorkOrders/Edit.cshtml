@@ -1,0 +1,69 @@
+﻿@page "{id:int}"
+@model HospOps.Pages.WorkOrders.EditModel
+@{
+    ViewData["Title"] = "Edit Work Order";
+}
+<h2 class="mb-3">Edit Work Order</h2>
+
+<form method="post" class="row g-3">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.RoomOrLocation" class="form-label"></label>
+        <input asp-for="Order.RoomOrLocation" class="form-control" />
+        <span asp-validation-for="Order.RoomOrLocation" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.Department" class="form-label"></label>
+        <select asp-for="Order.Department" class="form-select" asp-items="Html.GetEnumSelectList<Department>()"></select>
+        <span asp-validation-for="Order.Department" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.Severity" class="form-label"></label>
+        <select asp-for="Order.Severity" class="form-select" asp-items="Html.GetEnumSelectList<Severity>()"></select>
+        <span asp-validation-for="Order.Severity" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.DueDate" class="form-label"></label>
+        <input asp-for="Order.DueDate" class="form-control" type="date" />
+        <span asp-validation-for="Order.DueDate" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.Status" class="form-label"></label>
+        <select asp-for="Order.Status" class="form-select" asp-items="Html.GetEnumSelectList<WorkOrderStatus>()"></select>
+        <span asp-validation-for="Order.Status" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label asp-for="Order.ClosedAt" class="form-label"></label>
+        <input asp-for="Order.ClosedAt" class="form-control" type="date" />
+        <span class="form-text">Auto-set when status is Done (if empty).</span>
+        <span asp-validation-for="Order.ClosedAt" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Order.Description" class="form-label"></label>
+        <textarea asp-for="Order.Description" class="form-control" rows="5"></textarea>
+        <span asp-validation-for="Order.Description" class="text-danger"></span>
+    </div>
+
+    <div class="col-12">
+        <label asp-for="Order.CompletionNotes" class="form-label"></label>
+        <textarea asp-for="Order.CompletionNotes" class="form-control" rows="4" placeholder="Work performed, parts used, follow-up notes"></textarea>
+        <span asp-validation-for="Order.CompletionNotes" class="text-danger"></span>
+    </div>
+
+    <div class="col-12 d-flex gap-2">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-outline-secondary" asp-page="./Index">Back</a>
+        <a class="btn btn-outline-info" asp-page="./Details" asp-route-id="@Model.Order.Id">View Details</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

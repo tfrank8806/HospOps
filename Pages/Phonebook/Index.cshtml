@@ -1,0 +1,190 @@
+﻿@page
+@model HospOps.Pages.Phonebook.IndexModel
+@{
+    ViewData["Title"] = "Phonebook";
+}
+
+<h2 class="mb-3">Phonebook</h2>
+
+@if (TempData["Error"] is string err)
+{
+    <div class="alert alert-danger">@err</div>
+}
+@if (TempData["Success"] is string ok)
+{
+    <div class="alert alert-success">@ok</div>
+}
+
+<div class="row g-4 lf-two-col">
+    <!-- Left: New contact (sticky) -->
+    <div class="col-12 col-lg-4">
+        <div class="card shadow-sm lf-sticky">
+            <div class="card-body">
+                <h5 class="card-title">Add Contact</h5>
+                <form method="post" asp-page-handler="Create">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label" for="FirstName">First Name</label>
+                            <input id="FirstName" name="NewContact.FirstName" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <label class="form-label" for="LastName">Last Name</label>
+                            <input id="LastName" name="NewContact.LastName" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label" for="Company">Company</label>
+                        <input id="Company" name="NewContact.Company" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label" for="Address">Address</label>
+                        <input id="Address" name="NewContact.Address" class="form-control" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label" for="Website">Website</label>
+                        <input id="Website" name="NewContact.Website" class="form-control" placeholder="https://example.com" />
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Phone Numbers</label>
+                        <div id="phones">
+                            <div class="row g-2 phone-row mb-2">
+                                <div class="col-4">
+                                    <input class="form-control" name="NewContact.Phones[0].Label" placeholder="Label" />
+                                </div>
+                                <div class="col-8">
+                                    <input class="form-control" name="NewContact.Phones[0].Number" placeholder="(555) 123-4567" />
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="addPhone" class="btn btn-sm btn-outline-secondary">+ Add phone</button>
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label">Emails</label>
+                        <div id="emails">
+                            <div class="row g-2 email-row mb-2">
+                                <div class="col-4">
+                                    <input class="form-control" name="NewContact.Emails[0].Label" placeholder="Label" />
+                                </div>
+                                <div class="col-8">
+                                    <input class="form-control" name="NewContact.Emails[0].Address" placeholder="name@example.com" />
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="addEmail" class="btn btn-sm btn-outline-secondary">+ Add email</button>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label" for="Notes">Notes</label>
+                        <textarea id="Notes" name="NewContact.Notes" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">Save Contact</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: list -->
+    <div class="col-12 col-lg-8">
+        <div class="d-flex flex-wrap gap-2 align-items-end mb-2">
+            <form method="get" class="d-flex flex-wrap gap-2 align-items-center w-100">
+                <input class="form-control" type="text" name="q" placeholder="Search name, company, phone or email" value='@Model.Q' />
+                <button class="btn btn-outline-secondary" type="submit">Search</button>
+                <a class="btn btn-outline-dark" asp-page="./Index">Clear</a>
+            </form>
+        </div>
+
+        @if ((Model.Contacts?.Count ?? 0) == 0)
+        {
+            <div class="alert alert-info">No contacts yet.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Website</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model.Contacts!)
+                        {
+                            <tr class="@(c.IsDeleted ? "table-secondary" : string.Empty)">
+                                <td>@Model.DisplayName(c)</td>
+                                <td>@c.Company</td>
+                                <td>@Model.PrimaryPhone(c)</td>
+                                <td>@Model.PrimaryEmail(c)</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(c.Website))
+                                    {
+                                        <a href="@c.Website" target="_blank" rel="noopener">Link</a>
+                                    }
+                                    else
+                                    {
+                                        <span>—</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (!c.IsDeleted)
+                                    {
+                                        <form method="post" asp-page-handler="Delete" class="d-inline" onsubmit="return confirm('Remove this contact?');">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form method="post" asp-page-handler="Restore" class="d-inline">
+                                            <input type="hidden" name="id" value="@c.Id" />
+                                            <button class="btn btn-sm btn-success">Restore</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+            const phonesWrap = document.getElementById('phones');
+            const emailsWrap = document.getElementById('emails');
+            let pIndex = phonesWrap ? phonesWrap.querySelectorAll('.phone-row').length : 0;
+            let eIndex = emailsWrap ? emailsWrap.querySelectorAll('.email-row').length : 0;
+            const addPhoneBtn = document.getElementById('addPhone');
+            const addEmailBtn = document.getElementById('addEmail');
+            if (addPhoneBtn) addPhoneBtn.addEventListener('click', function(){
+                const row = document.createElement('div');
+                row.className = 'row g-2 phone-row mb-2';
+                row.innerHTML = '<div class="col-4"><input class="form-control" name="NewContact.Phones[' + pIndex + '].Label" placeholder="Label" /></div>' +
+                                '<div class="col-8"><input class="form-control" name="NewContact.Phones[' + pIndex + '].Number" placeholder="(555) 123-4567" /></div>';
+                phonesWrap.appendChild(row);
+                pIndex++;
+            });
+            if (addEmailBtn) addEmailBtn.addEventListener('click', function(){
+                const row = document.createElement('div');
+                row.className = 'row g-2 email-row mb-2';
+                row.innerHTML = '<div class="col-4"><input class="form-control" name="NewContact.Emails[' + eIndex + '].Label" placeholder="Label" /></div>' +
+                                '<div class="col-8"><input class="form-control" name="NewContact.Emails[' + eIndex + '].Address" placeholder="name@example.com" /></div>';
+                emailsWrap.appendChild(row);
+                eIndex++;
+            });
+        })();
+    </script>
+}

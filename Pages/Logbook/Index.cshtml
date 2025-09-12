@@ -1,0 +1,94 @@
+﻿@page
+@model HospOps.Pages.Logbook.IndexModel
+@{
+    ViewData["Title"] = "Logbook";
+}
+
+<h2 class="mb-3">Logbook</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-12 col-lg-4">
+        <input type="text" name="Q" value="@Model.Q" class="form-control" placeholder="Search title/notes/user..." />
+    </div>
+    <div class="col-6 col-lg-2">
+        <input type="date" name="Date" value="@Model.Date?.ToString("yyyy-MM-dd")" class="form-control" />
+    </div>
+    <div class="col-6 col-lg-2">
+        <select name="DepartmentFilter" class="form-select">
+            <option value="">All depts</option>
+            @foreach (var d in Enum.GetValues(typeof(HospOps.Models.Department)).Cast<HospOps.Models.Department>())
+            {
+                <option value="@d" selected="@(Model.DepartmentFilter == d ? "selected" : null)">@d</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-lg-2">
+        <select name="SeverityFilter" class="form-select">
+            <option value="">All severities</option>
+            @foreach (var s in Enum.GetValues(typeof(HospOps.Models.Severity)).Cast<HospOps.Models.Severity>())
+            {
+                <option value="@s" selected="@(Model.SeverityFilter == s ? "selected" : null)">@s</option>
+            }
+        </select>
+    </div>
+    <div class="col-6 col-lg-2 d-flex gap-2">
+        <button class="btn btn-primary flex-fill" type="submit">Apply</button>
+        <a class="btn btn-outline-secondary" asp-page="./Index">Clear</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Department</th>
+                <th>Severity</th>
+                <th>Title / Notes</th>
+                <th>By</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Entries.Count == 0)
+            {
+                <tr><td colspan="7"><div class="alert alert-info m-0">No log entries found for the selected filters.</div></td></tr>
+            }
+            else
+            {
+                foreach (var e in Model.Entries)
+                {
+                    <tr>
+                        <td>@e.Date.ToLocalTime().ToString("MM/dd/yy")</td>
+                        <td>@e.Department</td>
+                        <td>@e.Severity</td>
+                        <td>
+                            <div class="fw-semibold">@e.Title</div>
+                            @if (!string.IsNullOrWhiteSpace(e.Notes))
+                            {
+                                <div class="small text-muted">@e.Notes</div>
+                            }
+                        </td>
+                        <td>@(string.IsNullOrWhiteSpace(e.CreatedBy) ? "—" : e.CreatedBy)</td>
+                        <td>@e.CreatedAt.ToLocalTime().ToString("MM/dd/yy HH:mm")</td>
+                        <td class="text-end">
+                            <a asp-page="./Details" asp-route-id="@e.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                            <a asp-page="./Edit" asp-route-id="@e.Id" class="btn btn-sm btn-primary">Edit</a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@e.Id" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this log entry?');">Delete</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
