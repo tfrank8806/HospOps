@@ -1,4 +1,6 @@
-﻿// File: Pages/LostFound/Index.cshtml.cs
+﻿// =============================
+// File: Pages/LostFound/Index.cshtml.cs
+// =============================
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace HospOps.Pages.LostFound;
 
 [Authorize]
+[ValidateAntiForgeryToken] // apply to the whole Razor Page
 public class IndexModel : PageModel
 {
     private readonly HospOpsContext _db;
@@ -29,7 +32,6 @@ public class IndexModel : PageModel
             .OrderByDescending(x => x.CreatedAt).Take(200).ToListAsync();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostCreateLostAsync()
     {
         if (!ModelState.IsValid)
@@ -43,7 +45,6 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostCreateFoundAsync()
     {
         if (!ModelState.IsValid)
@@ -58,7 +59,6 @@ public class IndexModel : PageModel
     }
 
     // --- Admin deletes ---
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostDeleteLostAsync(int id)
     {
         if (!User.IsInRole("Admin")) return Forbid();
@@ -69,7 +69,6 @@ public class IndexModel : PageModel
         return RedirectToPage();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostDeleteFoundAsync(int id)
     {
         if (!User.IsInRole("Admin")) return Forbid();

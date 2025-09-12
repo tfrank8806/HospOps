@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Keep local app settings out of Git
+appsettings.Development.json
+appsettings.Local.json
+*.Local.json
+
+# If you ever used User Secrets file directly (rare):
+secrets.json

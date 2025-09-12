@@ -1,0 +1,38 @@
+﻿# GitHub Actions: build & deploy HospOps (.NET 8 Razor Pages) to Azure App Service
+# Uses a Publish Profile secret. Create secret in your repo: AZUREAPPSERVICE_PUBLISHPROFILE
+# (Azure Portal → App Service → Get publish profile → copy XML to the secret)
+
+name: build-and-deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore HospOps/HospOps.csproj
+
+      - name: Build
+        run: dotnet build HospOps/HospOps.csproj --configuration Release --no-restore
+
+      - name: Publish (self-contained folder)
+        run: dotnet publish HospOps/HospOps.csproj -c Release -o ${{ runner.temp }}/pub
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: <YOUR_APP_SERVICE_NAME>
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: ${{ runner.temp }}/pub

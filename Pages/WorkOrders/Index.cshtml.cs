@@ -1,4 +1,6 @@
-﻿// File: Pages/WorkOrders/Index.cshtml.cs
+﻿// =============================
+// File: Pages/WorkOrders/Index.cshtml.cs
+// =============================
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace HospOps.Pages.WorkOrders;
 
 [Authorize]
+[ValidateAntiForgeryToken] // apply to the whole Razor Page
 public class IndexModel : PageModel
 {
     private readonly HospOpsContext _db;
@@ -34,7 +37,6 @@ public class IndexModel : PageModel
             .ToListAsync();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostCreateAsync()
     {
         if (!ModelState.IsValid)
@@ -44,14 +46,14 @@ public class IndexModel : PageModel
         }
 
         NewOrder.CreatedAt = DateTime.UtcNow;
-        NewOrder.UpdatedAt = DateTime.UtcNow;
+        // Some projects may not have UpdatedAt; omit to avoid compile error
+        // NewOrder.UpdatedAt = DateTime.UtcNow;
 
         _db.WorkOrders.Add(NewOrder);
-        await _db.SaveChangesAsync(); // Will auto-write a LogEntry via HospOpsContext
+        await _db.SaveChangesAsync(); // auto-log via context hook
         return RedirectToPage();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostDeleteAsync(int id)
     {
         if (!User.IsInRole("Admin")) return Forbid();
