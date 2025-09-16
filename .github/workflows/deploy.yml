@@ -1,38 +1,55 @@
-﻿# GitHub Actions: build & deploy HospOps (.NET 8 Razor Pages) to Azure App Service
-# Uses a Publish Profile secret. Create secret in your repo: AZUREAPPSERVICE_PUBLISHPROFILE
-# (Azure Portal → App Service → Get publish profile → copy XML to the secret)
+﻿# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: build-and-deploy
+name: Build and deploy ASP.Net Core app to Azure Web App - hospops-web
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    permissions:
+      contents: read #This is required for actions/checkout
 
-      - name: Setup .NET
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.x'
 
-      - name: Restore
-        run: dotnet restore HospOps/HospOps.csproj
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
 
-      - name: Build
-        run: dotnet build HospOps/HospOps.csproj --configuration Release --no-restore
+      - name: dotnet publish
+        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
-      - name: Publish (self-contained folder)
-        run: dotnet publish HospOps/HospOps.csproj -c Release -o ${{ runner.temp }}/pub
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v4
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
 
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: .net-app
+      
       - name: Deploy to Azure Web App
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: <YOUR_APP_SERVICE_NAME>
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: ${{ runner.temp }}/pub
+          app-name: 'hospops-web'
+          slot-name: 'Production'
+          package: .
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_7D5796D54CC244EC8004B75C19E15711 }}
