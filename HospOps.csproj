@@ -3,6 +3,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<PlatformTarget>x86</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- EF Core + Identity (v8.x to match net8.0) -->
