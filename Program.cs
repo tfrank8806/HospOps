@@ -2,59 +2,52 @@
 using HospOps.Data;
 using HospOps.Models;
 using HospOps.Services;
-using Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ----- Database -----
-var conn = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=hospops.db";
-builder.Services.AddDbContext<HospOpsContext>(o => o.UseSqlite(conn));
-
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-
-// ----- Identity -----
-builder.Services
-    .AddDefaultIdentity<ApplicationUser>(o =>
-    {
-        o.SignIn.RequireConfirmedAccount = false;
-        o.Password.RequireDigit = true;
-        o.Password.RequireLowercase = true;
-        o.Password.RequireUppercase = true;
-        o.Password.RequireNonAlphanumeric = false;
-        o.Password.RequiredLength = 8;
-    })
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<HospOpsContext>();
-
-builder.Services.ConfigureApplicationCookie(o =>
-{
-    o.LoginPath = "/Account/Login";
-    o.AccessDeniedPath = "/Account/AccessDenied";
-});
-
-// ----- HttpContext -> CurrentUser for DbContext logging -----
+// --- Services ---
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+
+// Decide DB provider (Azure SQL in Prod if DefaultConnection looks like SQL Server; otherwise SQLite)
+var env = builder.Environment;
+var config = builder.Configuration;
+var cs = config.GetConnectionString("DefaultConnection");
+var looksLikeSqlServer = !string.IsNullOrWhiteSpace(cs) && cs.Contains("Server=", StringComparison.OrdinalIgnoreCase);
+
+builder.Services.AddDbContext<HospOpsContext>(options =>
+{
+    if (!env.IsDevelopment() && looksLikeSqlServer)
+    {
+        // Azure SQL / SQL Server in Production
+        options.UseSqlServer(cs);
+    }
+    else
+    {
+        // SQLite (Dev or no SQL connection provided). Use a writable path on App Service.
+        var home = Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
+        var dbPath = Path.Combine(home, "data", "hospops.db");
+        Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+        options.UseSqlite($"Data Source={dbPath}");
+    }
+});
+
+// Identity (use your existing ApplicationUser and Identity configuration)
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<HospOpsContext>();
 
 builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
-// Seed roles/admin
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    await IdentitySeed.EnsureSeedAsync(services);
-}
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-    app.UseMigrationsEndPoint();
-}
-else
+// --- Pipeline ---
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
@@ -66,4 +59,21 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapRazorPages();
-await app.RunAsync();
+
+// --- Migrate & Seed (safe; won't crash the process) ---
+using (var scope = app.Services.CreateScope())
+{
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<HospOpsContext>();
+        db.Database.Migrate();
+        await IdentitySeed.EnsureSeedAsync(scope.ServiceProvider);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Startup migration/seed failed");
+    }
+}
+
+app.Run();
