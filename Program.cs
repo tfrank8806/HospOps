@@ -1,52 +1,60 @@
-// File: Program.cs
+// ============================================================================
+// File: Program.cs  (REPLACE ENTIRE FILE)
+// ============================================================================
+using System.IO;
 using HospOps.Data;
 using HospOps.Models;
 using HospOps.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- Services ---
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+// Persist DataProtection keys (avoid auth cookie invalidation on restarts/scale-out)
+var home = Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
+var keysPath = Path.Combine(home, "data", "keys");
+Directory.CreateDirectory(keysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
+    .SetApplicationName("HospOps");
 
-// Decide DB provider (Azure SQL in Prod if DefaultConnection looks like SQL Server; otherwise SQLite)
-var env = builder.Environment;
-var config = builder.Configuration;
-var cs = config.GetConnectionString("DefaultConnection");
-var looksLikeSqlServer = !string.IsNullOrWhiteSpace(cs) && cs.Contains("Server=", StringComparison.OrdinalIgnoreCase);
-
+// Database: SQL Server if conn string contains "Server=", else SQLite under %HOME%/data
+var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
 builder.Services.AddDbContext<HospOpsContext>(options =>
 {
-    if (!env.IsDevelopment() && looksLikeSqlServer)
+    if (cs.Contains("Server=", StringComparison.OrdinalIgnoreCase))
     {
-        // Azure SQL / SQL Server in Production
         options.UseSqlServer(cs);
     }
     else
     {
-        // SQLite (Dev or no SQL connection provided). Use a writable path on App Service.
-        var home = Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
         var dbPath = Path.Combine(home, "data", "hospops.db");
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
         options.UseSqlite($"Data Source={dbPath}");
     }
 });
 
-// Identity (use your existing ApplicationUser and Identity configuration)
-builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+// Identity
+builder.Services.AddDefaultIdentity<ApplicationUser>(opt =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    opt.SignIn.RequireConfirmedAccount = false;
 })
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<HospOpsContext>();
 
 builder.Services.AddRazorPages();
 
+// Health checks (custom DB check; no EF health-check package required)
+builder.Services.AddHealthChecks()
+    .AddCheck<DbHealthCheck>("db", failureStatus: HealthStatus.Unhealthy);
+
+// Hosted service: nightly archiving of old LogEntries
+builder.Services.AddHostedService<LogEntryArchiver>();
+
 var app = builder.Build();
 
-// --- Pipeline ---
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -58,9 +66,12 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapRazorPages();
 
-// --- Migrate & Seed (safe; won't crash the process) ---
+app.MapRazorPages();
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
+
+// Safe startup migrate/seed
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();

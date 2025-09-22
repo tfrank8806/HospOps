@@ -1,40 +1,53 @@
-﻿// File: Data/HospOpsContextFactory.cs
-// Design-time factory so EF Core tools can create HospOpsContext during migrations.
-// This avoids issues caused by the constructor dependency on ICurrentUser.
-
+﻿// ============================================================================
+// File: Data/HospOpsContectFactory.cs   (REPLACE ENTIRE FILE)
+// NOTE: the filename in your error is "HospOpsContectFactory.cs" (with 'Contect').
+// Keep that exact filename or rename both file and class consistently.
+// ============================================================================
+using System;
+using System.IO;
 using HospOps.Models;
-using HospOps.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace HospOps.Data;
-
-public sealed class HospOpsContextFactory : IDesignTimeDbContextFactory<HospOpsContext>
+namespace HospOps.Data
 {
-    private sealed class DesignTimeCurrentUser : ICurrentUser
+    /// <summary>
+    /// Design-time factory for EF Core CLI (dotnet ef ...). Constructs HospOpsContext
+    /// with a single DbContextOptions argument to match the runtime constructor.
+    /// </summary>
+    public sealed class HospOpsContectFactory : IDesignTimeDbContextFactory<HospOpsContext>
     {
-        public string? UserId => null;           // no auth at design time
-        public string? UserName => "design-time"; // just for log text if used
-    }
+        public HospOpsContext CreateDbContext(string[] args)
+        {
+            // Resolve content root to the project directory where appsettings*.json live.
+            var basePath = Directory.GetCurrentDirectory();
 
-    public HospOpsContext CreateDbContext(string[] args)
-    {
-        // Load configuration to read the same connection string used at runtime
-        var basePath = Directory.GetCurrentDirectory();
-        var config = new ConfigurationBuilder()
-            .SetBasePath(basePath)
-            .AddJsonFile("appsettings.json", optional: true)
-            .AddJsonFile("appsettings.Development.json", optional: true)
-            .AddEnvironmentVariables()
-            .Build();
+            var config = new ConfigurationBuilder()
+                .SetBasePath(basePath)
+                .AddJsonFile("appsettings.json", optional: true)
+                .AddJsonFile("appsettings.Development.json", optional: true)
+                .AddEnvironmentVariables()
+                .Build();
 
-        var conn = config.GetConnectionString("DefaultConnection") ?? "Data Source=hospops.db";
+            var cs = config.GetConnectionString("DefaultConnection") ?? string.Empty;
 
-        var optionsBuilder = new DbContextOptionsBuilder<HospOpsContext>();
-        optionsBuilder.UseSqlite(conn);
+            var optionsBuilder = new DbContextOptionsBuilder<HospOpsContext>();
 
-        // Provide a fake current user so the context can be constructed
-        return new HospOpsContext(optionsBuilder.Options, new DesignTimeCurrentUser());
+            if (!string.IsNullOrWhiteSpace(cs) && cs.Contains("Server=", StringComparison.OrdinalIgnoreCase))
+            {
+                optionsBuilder.UseSqlServer(cs);
+            }
+            else
+            {
+                // Fallback to a local SQLite DB under a writable folder for tooling.
+                var home = Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
+                var dbPath = Path.Combine(home, "data", "hospops.design.db");
+                Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
+                optionsBuilder.UseSqlite($"Data Source={dbPath}");
+            }
+
+            return new HospOpsContext(optionsBuilder.Options);
+        }
     }
 }

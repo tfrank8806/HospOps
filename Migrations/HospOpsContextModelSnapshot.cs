@@ -23,30 +23,26 @@ namespace HospOps.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeSpan?>("EndTime")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EventName")
                         .IsRequired()
+                        .HasMaxLength(160)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("EventType")
-                        .IsRequired()
+                        .HasMaxLength(80)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Notes")
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("Recurring")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<TimeSpan?>("StartTime")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -126,6 +122,59 @@ namespace HospOps.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("HospOps.Models.CalendarCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CalendarCategories");
+                });
+
+            modelBuilder.Entity("HospOps.Models.CalendarEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventName")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EventType")
+                        .HasMaxLength(80)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Recurring")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CalendarEvents");
                 });
 
             modelBuilder.Entity("HospOps.Models.Contact", b =>
@@ -306,8 +355,6 @@ namespace HospOps.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ItemType", "ItemId", "OccurredAt");
-
                     b.ToTable("ItemChangeLogs");
                 });
 
@@ -344,7 +391,51 @@ namespace HospOps.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Date", "CreatedAt");
+
+                    b.HasIndex("Date", "Department", "CreatedAt");
+
+                    b.HasIndex("Date", "Severity", "CreatedAt");
+
                     b.ToTable("LogEntries");
+                });
+
+            modelBuilder.Entity("HospOps.Models.LogEntryArchive", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Date", "CreatedAt");
+
+                    b.ToTable("LogEntryArchives");
                 });
 
             modelBuilder.Entity("HospOps.Models.LostItem", b =>
@@ -436,12 +527,31 @@ namespace HospOps.Migrations
                         .HasMaxLength(160)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.ToTable("PassOnNotes");
+                });
+
+            modelBuilder.Entity("HospOps.Models.PassOnProperty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PassOnNoteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PropertyId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PassOnNoteId");
+
+                    b.ToTable("PassOnProperties");
                 });
 
             modelBuilder.Entity("HospOps.Models.WorkOrder", b =>
@@ -635,6 +745,17 @@ namespace HospOps.Migrations
                         .IsRequired();
 
                     b.Navigation("Contact");
+                });
+
+            modelBuilder.Entity("HospOps.Models.PassOnProperty", b =>
+                {
+                    b.HasOne("HospOps.Models.PassOnNote", "PassOnNote")
+                        .WithMany()
+                        .HasForeignKey("PassOnNoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PassOnNote");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

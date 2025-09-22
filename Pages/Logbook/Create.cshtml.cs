@@ -1,4 +1,6 @@
-// File: Pages/Logbook/Create.cshtml.cs
+// ============================================================================
+// File: Pages/Logbook/Create.cshtml.cs  (REPLACE ENTIRE FILE)
+// ============================================================================
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -14,27 +16,24 @@ public class CreateModel : PageModel
     public CreateModel(HospOpsContext db) => _db = db;
 
     [BindProperty]
-    public LogEntry Entry { get; set; } = new LogEntry
-    {
-        Date = DateTime.UtcNow,
-        Severity = Severity.Info
-    };
+    public LogEntry Entry { get; set; } = new();
 
-    public void OnGet()
-    {
-        if (Entry.Date == default) Entry.Date = DateTime.UtcNow;
-        Entry.Severity = Severity.Info;
-    }
+    public void OnGet() { }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid) return Page();
 
+        // why: guarantee safe default even if UI tampered/missing
+        if (!Enum.IsDefined(typeof(Severity), Entry.Severity))
+            Entry.Severity = Severity.Info;
+
+        Entry.Date = (Entry.Date == default ? DateTime.UtcNow.Date : Entry.Date.Date);
         Entry.CreatedAt = DateTime.UtcNow;
         Entry.CreatedBy = User?.Identity?.Name ?? "system";
 
         _db.LogEntries.Add(Entry);
         await _db.SaveChangesAsync();
-        return RedirectToPage("./Index");
+        return RedirectToPage("./Index", new { date = Entry.Date.ToString("yyyy-MM-dd") });
     }
 }

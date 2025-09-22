@@ -1,3 +1,6 @@
+// ============================================================================
+// File: Pages/Logbook/Edit.cshtml.cs  (REPLACE ENTIRE FILE)
+// ============================================================================
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -14,28 +17,32 @@ namespace HospOps.Pages.Logbook
         public EditModel(HospOpsContext db) => _db = db;
 
         [BindProperty]
-        public LogEntry Entry { get; set; } = null!;
+        public LogEntry Entry { get; set; } = new();
 
-        public async Task<IActionResult> OnGet(int id)
+        public async Task<IActionResult> OnGetAsync(int id)
         {
-            var entity = await _db.LogEntries.FindAsync(id);
-            if (entity == null) return NotFound();
-            Entry = entity;
+            var e = await _db.LogEntries.FindAsync(id);
+            if (e is null) return NotFound();
+            Entry = e;
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int id)
+        public async Task<IActionResult> OnPostAsync()
         {
-            var entity = await _db.LogEntries.FirstOrDefaultAsync(e => e.Id == id);
-            if (entity == null) return NotFound();
+            if (!ModelState.IsValid) return Page();
 
-            if (await TryUpdateModelAsync<LogEntry>(
-                entity,
-                "Entry",
+            var entity = await _db.LogEntries.FirstOrDefaultAsync(x => x.Id == Entry.Id);
+            if (entity is null) return NotFound();
+
+            if (await TryUpdateModelAsync(
+                entity, "Entry",
                 e => e.Date, e => e.Department, e => e.Title, e => e.Notes, e => e.Severity))
             {
+                if (!Enum.IsDefined(typeof(Severity), entity.Severity))
+                    entity.Severity = Severity.Info;
+
                 await _db.SaveChangesAsync();
-                return RedirectToPage("./Index");
+                return RedirectToPage("./Index", new { date = entity.Date.ToString("yyyy-MM-dd") });
             }
 
             Entry = entity;

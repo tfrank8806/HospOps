@@ -1,30 +1,21 @@
 ﻿// ============================================================================
-// File: Models/PassOnNote.cs   (REPLACE ENTIRE FILE)
+// File: Models/PassOn.cs   (ADD NEW FILE)
 // ============================================================================
 using System.ComponentModel.DataAnnotations;
 
 namespace HospOps.Models
 {
-    /// <summary>Shift handoff ("Pass On") note.</summary>
-    public class PassOnNote
+    public class PassOn
     {
         public int Id { get; set; }
 
         [DataType(DataType.Date)]
         public DateTime Date { get; set; } = DateTime.UtcNow.Date;
 
-        // Required by existing pages
-        [Required]
-        public Department Department { get; set; } = Department.Other;
-
-        [Required, StringLength(160)]
-        public string Title { get; set; } = string.Empty;
-
         [Required, StringLength(4000)]
-        public string Message { get; set; } = string.Empty;
+        public string Notes { get; set; } = string.Empty;
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? UpdatedAt { get; set; }
 
         [StringLength(100)]
         public string? CreatedBy { get; set; }
