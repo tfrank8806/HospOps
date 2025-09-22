@@ -1,0 +1,28 @@
+﻿@page
+@model HospOps.Pages.Admin.Tools.MigrationsModel
+@{
+    ViewData["Title"] = "Migrations";
+}
+<h4>Migrations</h4>
+
+@if (TempData["Msg"] is string msg)
+{
+    <div class="alert alert-success">@msg</div>
+}
+
+@if (Model.Pending.Count == 0)
+{
+    <div class="alert alert-info">No pending migrations.</div>
+}
+else
+{
+    <div class="alert alert-warning">
+        Pending migrations:
+        <ul class="mb-0">
+        @foreach (var m in Model.Pending) { <li>@m</li> }
+        </ul>
+    </div>
+    <form method="post" asp-page-handler="Apply">
+        <button class="btn btn-primary" type="submit">Apply Migrations</button>
+    </form>
+}

@@ -1,43 +1,86 @@
-﻿// File: HospOps/Models/WorkOrder.cs
+﻿// ============================================================================
+// File: Models/WorkOrder.cs  (ADD THIS FILE; REPLACE ANY OLD VARIANTS)
+// Backward-compatible Work Order with NotMapped shims for legacy Razor pages.
+// ============================================================================
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HospOps.Models
 {
-    public enum WorkOrderStatus
-    {
-        Open = 0,
-        InProgress = 1,
-        Done = 2
-    }
-
     public class WorkOrder
     {
         public int Id { get; set; }
 
-        [Display(Name = "Room/Location"), Required, StringLength(50)]
-        public string RoomOrLocation { get; set; } = string.Empty;
+        // --- Canonical persisted fields ---
+        [StringLength(40)]
+        public string? Location { get; set; }              // e.g., "1204" or "Pool Pump Room"
 
-        [Required, StringLength(2000)]
-        public string Description { get; set; } = string.Empty;
+        [Required, StringLength(200)]
+        public string Issue { get; set; } = string.Empty;  // short title/summary
 
-        [Required]
-        public Department Department { get; set; }
+        [StringLength(4000)]
+        public string? Details { get; set; }               // long description
 
-        [Required]
-        public Severity Severity { get; set; }
+        public int AssignedDepartmentId { get; set; }      // FK → Department
+        public Department? AssignedDepartment { get; set; }
 
-        [Required, DataType(DataType.Date)]
-        public DateTime DueDate { get; set; }
+        public int? WorkOrderTypeId { get; set; }          // optional FK → WorkOrderType
+        public WorkOrderType? WorkOrderType { get; set; }
 
-        [Required]
-        public WorkOrderStatus Status { get; set; } = WorkOrderStatus.Open;
+        public int StatusId { get; set; }                  // FK → WorkOrderStatus
+        public WorkOrderStatus? StatusRef { get; set; }
 
-        [StringLength(2000)]
-        public string? CompletionNotes { get; set; }
-
-        [DataType(DataType.Date)]
+        public DateTime? DueDate { get; set; }
         public DateTime? ClosedAt { get; set; }
 
+        [StringLength(2000)]
+        public string? CloseNotes { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // --- NotMapped shims for legacy pages/views ---
+        /// <summary>Legacy alias for Location.</summary>
+        [NotMapped]
+        public string? RoomOrLocation
+        {
+            get => Location;
+            set => Location = value;
+        }
+
+        /// <summary>Legacy alias for Issue (short description).</summary>
+        [NotMapped]
+        public string? Description
+        {
+            get => Issue;
+            set => Issue = value ?? string.Empty;
+        }
+
+        /// <summary>Legacy alias for CloseNotes.</summary>
+        [NotMapped]
+        public string? CompletionNotes
+        {
+            get => CloseNotes;
+            set => CloseNotes = value;
+        }
+
+        /// <summary>Legacy projection: department id (enum-like) backed by FK.</summary>
+        [NotMapped]
+        public int Department
+        {
+            get => AssignedDepartmentId;
+            set => AssignedDepartmentId = value;
+        }
+
+        /// <summary>Legacy projection: status name for quick display.</summary>
+        [NotMapped]
+        public string? Status => StatusRef?.Name;
+
+        /// <summary>
+        /// Legacy placeholder for severity (work orders don't persist severity; logs do).
+        /// Provided only to keep old pages compiling; no storage.
+        /// </summary>
+        [NotMapped]
+        public int? Severity { get; set; }
     }
 }

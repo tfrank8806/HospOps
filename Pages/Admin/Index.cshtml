@@ -1,0 +1,159 @@
+﻿@page
+@model HospOps.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Admin Home";
+}
+
+<div class="mb-4">
+  <h2 class="mb-1">Admin Home</h2>
+  <p class="text-muted">Configure property data, lookups, users, and access.</p>
+</div>
+
+<div class="row g-4">
+  <!-- Property Settings -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <strong>Property Settings</strong>
+      </div>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">Hotel Layout</div>
+              <div class="small text-muted">Build a floorplan (squares/rectangles) for the homepage widget; map rooms & public areas.</div>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/Property/HotelLayout">Open</a>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">Room Numbers</div>
+              <div class="small text-muted">Maintain room number, floor, and room type lists.</div>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/Property/RoomNumbers">Open</a>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold">Locations</div>
+              <div class="small text-muted">Map room positions and add public-area locations used across the site.</div>
+            </div>
+            <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/Property/Locations">Open</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data Lists -->
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header">
+        <strong>Data Lists</strong>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center border rounded p-3">
+              <div>
+                <div class="fw-semibold">Departments</div>
+                <div class="small text-muted">Populate department lists used on pages.</div>
+              </div>
+              <div class="text-end">
+                <div class="small text-muted">@Model.DepartmentCount total</div>
+                <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Admin/Departments/Index">Manage</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center border rounded p-3">
+              <div>
+                <div class="fw-semibold">Work Order Types</div>
+                <div class="small text-muted">Types shown on work order submission.</div>
+              </div>
+              <div class="text-end">
+                <div class="small text-muted">@Model.WorkOrderTypeCount total</div>
+                <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Admin/WorkOrders/Types">Manage</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center border rounded p-3">
+              <div>
+                <div class="fw-semibold">Work Order Statuses</div>
+                <div class="small text-muted">Default status + color coding for lists.</div>
+              </div>
+              <div class="text-end">
+                <div class="small text-muted">@Model.WorkOrderStatusCount total</div>
+                <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Admin/WorkOrders/Statuses">Manage</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center border rounded p-3">
+              <div>
+                <div class="fw-semibold">Calendar Categories</div>
+                <div class="small text-muted">Categories + colors for calendar.</div>
+              </div>
+              <div class="text-end">
+                <div class="small text-muted">@Model.CalendarCategoryCount total</div>
+                <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Admin/Calendar/Categories">Manage</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center border rounded p-3">
+              <div>
+                <div class="fw-semibold">Phonebook Types</div>
+                <div class="small text-muted">Types + colors for phonebook entries.</div>
+              </div>
+              <div class="text-end">
+                <a class="btn btn-sm btn-outline-primary ms-2" asp-page="/Admin/Phonebook/Types">Manage</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Team -->
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>My Team</strong>
+        <a class="btn btn-sm btn-outline-secondary" asp-page="/Admin/AccessRequests/Index">
+          Access Requests
+          @if (Model.AccessRequestPending > 0)
+          { <span class="badge text-bg-warning ms-1">@Model.AccessRequestPending</span> }
+        </a>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="border rounded p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">Users</div>
+                <div class="small text-muted">Create users, edit info, manage roles.</div>
+              </div>
+              <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/MyTeam/Users">Open</a>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">Access Levels</div>
+                <div class="small text-muted">Define named levels + page-level CRUD.</div>
+              </div>
+              <a class="btn btn-sm btn-outline-primary" asp-page="/Admin/MyTeam/AccessLevels">Open</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

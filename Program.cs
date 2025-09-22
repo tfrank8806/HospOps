@@ -1,5 +1,6 @@
 // ============================================================================
 // File: Program.cs  (REPLACE ENTIRE FILE)
+// Calls AccessRequestSeed to ensure a pending item exists.
 // ============================================================================
 using System.IO;
 using HospOps.Data;
@@ -12,7 +13,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Persist DataProtection keys (avoid auth cookie invalidation on restarts/scale-out)
+// Persist DataProtection keys
 var home = Environment.GetEnvironmentVariable("HOME") ?? AppContext.BaseDirectory;
 var keysPath = Path.Combine(home, "data", "keys");
 Directory.CreateDirectory(keysPath);
@@ -20,14 +21,12 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(keysPath))
     .SetApplicationName("HospOps");
 
-// Database: SQL Server if conn string contains "Server=", else SQLite under %HOME%/data
+// DB: SQL Server if "Server=" else SQLite
 var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
 builder.Services.AddDbContext<HospOpsContext>(options =>
 {
     if (cs.Contains("Server=", StringComparison.OrdinalIgnoreCase))
-    {
         options.UseSqlServer(cs);
-    }
     else
     {
         var dbPath = Path.Combine(home, "data", "hospops.db");
@@ -37,20 +36,17 @@ builder.Services.AddDbContext<HospOpsContext>(options =>
 });
 
 // Identity
-builder.Services.AddDefaultIdentity<ApplicationUser>(opt =>
-{
-    opt.SignIn.RequireConfirmedAccount = false;
-})
-.AddRoles<IdentityRole>()
-.AddEntityFrameworkStores<HospOpsContext>();
+builder.Services.AddDefaultIdentity<ApplicationUser>(opt => { opt.SignIn.RequireConfirmedAccount = false; })
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<HospOpsContext>();
 
 builder.Services.AddRazorPages();
 
-// Health checks (custom DB check; no EF health-check package required)
+// Health checks (custom)
 builder.Services.AddHealthChecks()
     .AddCheck<DbHealthCheck>("db", failureStatus: HealthStatus.Unhealthy);
 
-// Hosted service: nightly archiving of old LogEntries
+// Hosted services
 builder.Services.AddHostedService<LogEntryArchiver>();
 
 var app = builder.Build();
@@ -71,7 +67,7 @@ app.MapRazorPages();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/ready");
 
-// Safe startup migrate/seed
+// Startup migrate/seed
 using (var scope = app.Services.CreateScope())
 {
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
@@ -79,7 +75,9 @@ using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<HospOpsContext>();
         db.Database.Migrate();
+
         await IdentitySeed.EnsureSeedAsync(scope.ServiceProvider);
+        await AccessRequestSeed.EnsureAsync(scope.ServiceProvider);
     }
     catch (Exception ex)
     {

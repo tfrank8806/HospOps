@@ -1,56 +1,106 @@
-﻿@* File: Pages/Shared/_Layout.cshtml *@
-@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+﻿<!-- =========================================================================
+File: Pages/Shared/_Layout.cshtml  (REPLACE ENTIRE FILE)
+Safe pending-count: avoids crashes when table/migrations aren't applied yet
+============================================================================= -->
+@using Microsoft.AspNetCore.Identity
+@using HospOps.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject HospOps.Data.HospOpsContext Db
+@{
+    var pendingCount = 0;
+    try
+    {
+        // Guard against first-boot: table might not exist yet
+        if (Db.Database.CanConnect())
+        {
+            pendingCount = Db.AccessRequests.Where(a => !a.Approved).Count();
+        }
+    }
+    catch
+    {
+        pendingCount = 0; // table missing or migrations pending
+    }
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - HospOps</title>
-
-    <!-- Bootstrap from CDN (fixes 404s from /wwwroot/lib) -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom shadow-sm">
+        <nav class="navbar navbar-expand-md navbar-dark bg-dark">
             <div class="container">
                 <a class="navbar-brand" asp-page="/Index">HospOps</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="collapse navbar-collapse" id="mainNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-page="/Index">Home</a></li>
+                <div id="navMain" class="collapse navbar-collapse">
+                    <ul class="navbar-nav me-auto mb-2 mb-md-0">
                         <li class="nav-item"><a class="nav-link" asp-page="/PassOn/Index">Pass On</a></li>
                         <li class="nav-item"><a class="nav-link" asp-page="/WorkOrders/Index">Work Orders</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-page="/LostFound/Index">Lost &amp; Found</a></li>
                         <li class="nav-item"><a class="nav-link" asp-page="/Calendar/Index">Calendar</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-page="/LostFound/Index">Lost &amp; Found</a></li>
                         <li class="nav-item"><a class="nav-link" asp-page="/Phonebook/Index">Phonebook</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-page="/Logbook/Index">Logbook</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-page="/Logbook/Index">Logs</a></li>
+
+                        @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button" data-bs-toggle="dropdown">
+                                    <span>Admin</span>
+                                    @if (pendingCount > 0)
+                                    {
+                                        <span class="badge text-bg-warning">@pendingCount</span>
+                                    }
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item d-flex justify-content-between align-items-center" asp-page="/Admin/AccessRequests/Index">
+                                            <span>Access Requests</span>
+                                            @if (pendingCount > 0)
+                                            {
+                                                <span class="badge text-bg-warning">@pendingCount</span>
+                                            }
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                    <li><a class="dropdown-item" asp-page="/Admin/Index">Admin Home</a></li>
+                                </ul>
+                            </li>
+                        }
                     </ul>
-                    <partial name="_LoginPartial" />
+
+                    <ul class="navbar-nav ms-auto">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-page="/Account/Manage/Index">My Profile</a></li>
+                            <li class="nav-item">
+                                <form class="d-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })" method="post">
+                                    <button type="submit" class="btn btn-link nav-link">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-page="/Account/Login">Login</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-page="/Account/RequestAccess">Request Access</a></li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
-
-    <div class="container py-4">
+    <div class="container my-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container py-3">
-            &copy; @DateTime.Now.Year - HospOps
-        </div>
-    </footer>
-
-    <!-- Bootstrap bundle (with Popper) from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
     @RenderSection("Scripts", required: false)
 </body>
 </html>
