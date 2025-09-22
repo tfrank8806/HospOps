@@ -1,70 +1,48 @@
-﻿// ============================================================================
-// File: Pages/Logbook/Index.cshtml.cs  (REPLACE ENTIRE FILE)
-// ============================================================================
+﻿// File: Pages/Logbook/Index.cshtml.cs
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
-namespace HospOps.Pages.Logbook;
-
-[Authorize]
-public class IndexModel : PageModel
+namespace HospOps.Pages.Logbook
 {
-    private readonly HospOpsContext _db;
-    public IndexModel(HospOpsContext db) => _db = db;
-
-    public List<LogEntry> Entries { get; private set; } = new();
-
-    [BindProperty(SupportsGet = true)] public string? Q { get; set; }
-    [BindProperty(SupportsGet = true)] public DateTime? Date { get; set; }
-    [BindProperty(SupportsGet = true)] public Department? DepartmentFilter { get; set; }
-    [BindProperty(SupportsGet = true)] public Severity? SeverityFilter { get; set; }
-
-    public DateTime Day => (Date?.Date) ?? System.DateTime.Today;
-
-    public async Task OnGetAsync()
+    [Authorize]
+    public class IndexModel : PageModel
     {
-        IQueryable<LogEntry> q = _db.LogEntries.AsNoTracking();
+        private readonly HospOpsContext _db;
+        public IndexModel(HospOpsContext db) => _db = db;
 
-        // one full day per page
-        q = q.Where(e => e.Date.Date == Day);
+        public IList<LogEntry> Items { get; private set; } = new List<LogEntry>();
+        public SelectList DepartmentsSelect { get; private set; } = default!;
+        public SelectList SeveritiesSelect { get; private set; } = default!;
 
-        if (!string.IsNullOrWhiteSpace(Q))
+        [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+        public DateTime? Date { get; set; } = DateTime.Today;
+
+        [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+        public int? DepartmentId { get; set; }
+
+        [Microsoft.AspNetCore.Mvc.BindProperty(SupportsGet = true)]
+        public Severity? Severity { get; set; }
+
+        public async Task OnGetAsync()
         {
-            var t = $"%{Q.Trim()}%";
-            q = q.Where(e =>
-                (e.Title != null && EF.Functions.Like(e.Title, t)) ||
-                (e.Notes != null && EF.Functions.Like(e.Notes, t)) ||
-                (e.CreatedBy != null && EF.Functions.Like(e.CreatedBy, t)));
+            DepartmentsSelect = new SelectList(await _db.Departments
+                .Where(d => d.IsActive).OrderBy(d => d.SortOrder).ThenBy(d => d.Name).ToListAsync(), "Id", "Name");
+
+            SeveritiesSelect = new SelectList(Enum.GetValues<Severity>().Select(s => new { Id = (int)s, Name = s.ToString() }), "Id", "Name");
+
+            var day = (Date ?? DateTime.Today).Date;
+            var next = day.AddDays(1);
+
+            var q = _db.LogEntries.AsNoTracking().Where(l => l.Date >= day && l.Date < next);
+
+            if (DepartmentId is int did) q = q.Where(l => l.DepartmentId == did);
+            if (Severity is Severity sev) q = q.Where(l => l.Severity == sev);
+
+            Items = await q.OrderByDescending(l => l.CreatedAt).ToListAsync();
         }
-
-        if (DepartmentFilter.HasValue)
-            q = q.Where(e => e.Department == DepartmentFilter.Value);
-
-        if (SeverityFilter.HasValue)
-            q = q.Where(e => e.Severity == SeverityFilter.Value);
-
-        Entries = await q
-            .OrderByDescending(e => e.CreatedAt)
-            .ToListAsync();
-    }
-
-    public IActionResult OnGetPrevDay() =>
-        RedirectToPage(new { date = Day.AddDays(-1).ToString("yyyy-MM-dd"), q = Q, DepartmentFilter, SeverityFilter });
-
-    public IActionResult OnGetNextDay() =>
-        RedirectToPage(new { date = Day.AddDays(1).ToString("yyyy-MM-dd"), q = Q, DepartmentFilter, SeverityFilter });
-
-    public async Task<IActionResult> OnPostDeleteAsync(int id)
-    {
-        if (!User.IsInRole("Admin")) return Forbid();
-        var entity = await _db.LogEntries.FindAsync(id);
-        if (entity is null) return NotFound();
-        _db.LogEntries.Remove(entity);
-        await _db.SaveChangesAsync();
-        return RedirectToPage(new { date = Day.ToString("yyyy-MM-dd"), q = Q, DepartmentFilter, SeverityFilter });
     }
 }

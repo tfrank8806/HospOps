@@ -3,116 +3,59 @@
 @{
     ViewData["Title"] = "Work Orders";
 }
-<h2 class="mb-3">Work Orders</h2>
+<h3>Work Orders</h3>
 
-<div class="row g-4">
-    <div class="col-12 col-lg-4">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">New Work Order</h5>
-                <form method="post" asp-page-handler="Create">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                    <div class="mb-2">
-                        <label asp-for="NewOrder.RoomOrLocation" class="form-label"></label>
-                        <input asp-for="NewOrder.RoomOrLocation" class="form-control" />
-                        <span asp-validation-for="NewOrder.RoomOrLocation" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-2">
-                        <label asp-for="NewOrder.Description" class="form-label"></label>
-                        <textarea asp-for="NewOrder.Description" class="form-control" rows="4"></textarea>
-                        <span asp-validation-for="NewOrder.Description" class="text-danger"></span>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <label asp-for="NewOrder.Department" class="form-label"></label>
-                            <select asp-for="NewOrder.Department" class="form-select"
-                                    asp-items="Html.GetEnumSelectList<HospOps.Models.Department>()"></select>
-                            <span asp-validation-for="NewOrder.Department" class="text-danger"></span>
-                        </div>
-                        <div class="col-6 mb-2">
-                            <label asp-for="NewOrder.Severity" class="form-label"></label>
-                            <select asp-for="NewOrder.Severity" class="form-select"
-                                    asp-items="Html.GetEnumSelectList<HospOps.Models.Severity>()"></select>
-                            <span asp-validation-for="NewOrder.Severity" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <label asp-for="NewOrder.DueDate" class="form-label"></label>
-                            <input asp-for="NewOrder.DueDate" class="form-control" type="date" />
-                            <span asp-validation-for="NewOrder.DueDate" class="text-danger"></span>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label asp-for="NewOrder.Status" class="form-label"></label>
-                            <select asp-for="NewOrder.Status" class="form-select"
-                                    asp-items="Html.GetEnumSelectList<HospOps.Models.WorkOrderStatus>()"></select>
-                            <span asp-validation-for="NewOrder.Status" class="text-danger"></span>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-success">Add Work Order</button>
-                </form>
-            </div>
-        </div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Department</label>
+        <select class="form-select" asp-for="DepartmentId" asp-items="Model.DepartmentsSelect">
+            <option value="">All</option>
+        </select>
     </div>
-
-    <div class="col-12 col-lg-8">
-        <h5 class="mb-2">Recent Work Orders</h5>
-        @if (Model.Orders.Count == 0)
-        {
-            <div class="alert alert-info">No work orders yet.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>Created</th>
-                            <th>Dept</th>
-                            <th>Severity</th>
-                            <th>Room/Location</th>
-                            <th>Description</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var o in Model.Orders)
-                        {
-                            <tr>
-                                <td>@o.CreatedAt.ToLocalTime().ToString("MM/dd/yy")</td>
-                                <td>@o.Department</td>
-                                <td>@o.Severity</td>
-                                <td>@o.RoomOrLocation</td>
-                                <td class="small">@o.Description</td>
-                                <td>@o.Status</td>
-                                <td class="text-end">
-                                    <a asp-page="./Edit" asp-route-id="@o.Id" class="btn btn-sm btn-primary">Edit</a>
-                                    <a asp-page="./Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">Details</a>
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <form method="post" asp-page-handler="Delete" asp-route-id="@o.Id" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                    onclick="return confirm('Delete this work order?');">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+    <div class="col-md-3">
+        <label class="form-label">Status</label>
+        <select class="form-select" asp-for="StatusId" asp-items="Model.StatusesSelect">
+            <option value="">All</option>
+        </select>
     </div>
-</div>
+    <div class="col-md-4">
+        <label class="form-label">Keyword</label>
+        <input class="form-control" asp-for="Keyword" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100" type="submit">Filter</button>
+    </div>
+</form>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<table class="table table-hover align-middle">
+    <thead>
+        <tr>
+            <th>Created</th>
+            <th>Issue</th>
+            <th>Location</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var w in Model.Items)
+        {
+            <tr>
+                <td>@w.CreatedAt.ToLocalTime().ToString("g")</td>
+                <td>@w.Issue</td>
+                <td>@w.Location</td>
+                <td>@w.AssignedDepartment?.Name</td>
+                <td>
+                    <span class="badge" style="background-color:@(w.StatusRef?.ColorHex ?? "#6c757d")">
+                        @w.StatusRef?.Name
+                    </span>
+                </td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary" asp-page="Edit" asp-route-id="@w.Id">Edit</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-page="Details" asp-route-id="@w.Id">Details</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

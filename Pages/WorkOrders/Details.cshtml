@@ -3,52 +3,36 @@
 @{
     ViewData["Title"] = "Work Order Details";
 }
-<h2 class="mb-3">Work Order Details</h2>
+<h3>Work Order Details</h3>
 
-@if (Model.Order is null)
-{
-    <div class="alert alert-danger">Work order not found.</div>
-}
-else
-{
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <dl class="row">
-                <dt class="col-sm-3">Id</dt>
-                <dd class="col-sm-9">@Model.Order.Id</dd>
+<dl class="row">
+    <dt class="col-sm-3">Created</dt>
+    <dd class="col-sm-9">@Model.Item.CreatedAt.ToLocalTime().ToString("g")</dd>
 
-                <dt class="col-sm-3">Room/Location</dt>
-                <dd class="col-sm-9">@Model.Order.RoomOrLocation</dd>
+    <dt class="col-sm-3">Issue</dt>
+    <dd class="col-sm-9">@Model.Item.Issue</dd>
 
-                <dt class="col-sm-3">Department</dt>
-                <dd class="col-sm-9">@Model.Order.Department</dd>
+    <dt class="col-sm-3">Location</dt>
+    <dd class="col-sm-9">@Model.Item.Location</dd>
 
-                <dt class="col-sm-3">Severity</dt>
-                <dd class="col-sm-9">@Model.Order.Severity</dd>
+    <dt class="col-sm-3">Department</dt>
+    <dd class="col-sm-9">@Model.Item.AssignedDepartment?.Name</dd>
 
-                <dt class="col-sm-3">Status</dt>
-                <dd class="col-sm-9">@Model.Order.Status</dd>
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">
+        <span class="badge" style="background-color:@(Model.Item.StatusRef?.ColorHex ?? "#6c757d")">
+            @Model.Item.StatusRef?.Name
+        </span>
+    </dd>
 
-                <dt class="col-sm-3">Due Date</dt>
-                <dd class="col-sm-9">@Model.Order.DueDate.ToString("yyyy-MM-dd")</dd>
+    <dt class="col-sm-3">Due</dt>
+    <dd class="col-sm-9">@Model.Item.DueDate?.ToLocalTime().ToString("d")</dd>
 
-                <dt class="col-sm-3">Closed Date</dt>
-                <dd class="col-sm-9">@(Model.Order.ClosedAt?.ToString("yyyy-MM-dd") ?? "—")</dd>
+    <dt class="col-sm-3">Closed</dt>
+    <dd class="col-sm-9">@Model.Item.ClosedAt?.ToLocalTime().ToString("g")</dd>
 
-                <dt class="col-sm-3">Description</dt>
-                <dd class="col-sm-9"><pre class="mb-0">@Model.Order.Description</pre></dd>
+    <dt class="col-sm-3">Completion Notes</dt>
+    <dd class="col-sm-9">@Model.Item.CloseNotes</dd>
+</dl>
 
-                <dt class="col-sm-3">Completion Notes</dt>
-                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Order.CompletionNotes) ? "—" : Model.Order.CompletionNotes)</dd>
-
-                <dt class="col-sm-3">Created</dt>
-                <dd class="col-sm-9">@Model.Order.CreatedAt.ToLocalTime().ToString("g")</dd>
-            </dl>
-
-            <div class="d-flex gap-2">
-                <a class="btn btn-primary" asp-page="./Edit" asp-route-id="@Model.Order.Id">Edit</a>
-                <a class="btn btn-outline-secondary" asp-page="./Index">Back</a>
-            </div>
-        </div>
-    </div>
-}
+<a class="btn btn-secondary" asp-page="Index">Back</a>

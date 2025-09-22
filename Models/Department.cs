@@ -1,5 +1,6 @@
 ﻿// ============================================================================
-// File: Models/Department.cs   (ADD or REPLACE IF EXISTS; ensure it's an ENTITY)
+// File: Models/Department.cs   (REPLACE ENTIRE FILE)
+// A proper EF entity (NOT an enum). One canonical Department model.
 // ============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +13,15 @@ namespace HospOps.Models
         [Required, StringLength(80)]
         public string Name { get; set; } = string.Empty;
 
-        public int SortOrder { get; set; } = 0;
+        // Optional: visual tag for UI badges
+        [StringLength(7)]
+        public string? ColorHex { get; set; }  // e.g. "#0d6efd"
+
         public bool IsActive { get; set; } = true;
+
+        public int SortOrder { get; set; } = 0;
+
+        // Optional multi-property support (keep nullable if not used yet)
+        public int? PropertyId { get; set; }
     }
 }

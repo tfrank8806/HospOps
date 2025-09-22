@@ -1,7 +1,6 @@
-﻿// ============================================================================
-// File: Models/LogEntry.cs  (REPLACE ENTIRE FILE)
-// ============================================================================
+﻿// File: Models/LogEntry.cs
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HospOps.Models
 {
@@ -9,11 +8,7 @@ namespace HospOps.Models
     {
         public int Id { get; set; }
 
-        [DataType(DataType.Date)]
         public DateTime Date { get; set; } = DateTime.UtcNow.Date;
-
-        [Required]
-        public Department Department { get; set; } = default;
 
         [Required, StringLength(160)]
         public string Title { get; set; } = string.Empty;
@@ -21,12 +16,20 @@ namespace HospOps.Models
         [StringLength(4000)]
         public string? Notes { get; set; }
 
-        [Required]
-        public Severity Severity { get; set; } = Severity.Info; // why: safe default
+        public Severity Severity { get; set; } = Severity.Info;
+
+        // Persisted FK
+        public int? DepartmentId { get; set; }
+
+        // TEMP: Ignore at EF mapping time to unblock migrations/design-time
+        [NotMapped]
+        public Department? Department { get; set; }
 
         [StringLength(100)]
         public string? CreatedBy { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
     }
 }

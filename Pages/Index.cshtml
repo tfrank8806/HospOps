@@ -2,133 +2,56 @@
 @model HospOps.Pages.IndexModel
 @{
     ViewData["Title"] = "Home";
-    string Trunc(string? s, int n) => string.IsNullOrWhiteSpace(s) ? "-" : (s!.Length <= n ? s : s.Substring(0, n) + "…");
 }
+<h3>Dashboard</h3>
 
-<div class="row g-4">
-  <div class="col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Work Orders (recent)</strong>
-        <a class="btn btn-sm btn-outline-secondary" asp-page="/WorkOrders/Index">View All</a>
-      </div>
-      <div class="card-body">
-        @if (Model.RecentWorkOrders.Count == 0)
-        {
-            <div class="text-muted">No recent work orders.</div>
-        }
-        else
-        {
-            <ul class="list-group list-group-flush">
-@foreach (var w in Model.RecentWorkOrders)
-{
-    <li class="list-group-item">
-      <div class="d-flex justify-content-between">
-        <div class="me-3">
-          <div class="fw-semibold">@Trunc(w.Description, 80)</div>
-          <div class="small text-muted">Location: @w.RoomOrLocation</div>
-        </div>
-        <div class="text-end small">
-          <div>Due @w.DueDate.ToShortDateString()</div>
-          <div>Status: @w.Status</div>
-          <div class="text-muted">Created @w.CreatedAt.ToLocalTime().ToString("g")</div>
-        </div>
-      </div>
-    </li>
-}
-            </ul>
-        }
-      </div>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Recent Work Orders</div>
+      <ul class="list-group list-group-flush">
+      @foreach (var w in Model.RecentWorkOrders)
+      {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">@w.Issue</div>
+            <div class="small text-muted">@w.Location</div>
+          </div>
+          <div class="text-end">
+            <div class="small">@w.CreatedAt.ToLocalTime().ToString("g")</div>
+            <span class="badge" style="background-color:@(w.StatusRef?.ColorHex ?? "#6c757d")">@w.StatusRef?.Name</span>
+          </div>
+        </li>
+      }
+      </ul>
     </div>
   </div>
 
-  <div class="col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Lost &amp; Found (recent)</strong>
-        <a class="btn btn-sm btn-outline-secondary" asp-page="/LostFound/Index">View All</a>
-      </div>
-      <div class="card-body">
-        <div class="row">
-          <div class="col">
-            <div class="fw-semibold mb-2">Found</div>
-            @if (Model.RecentFound.Count == 0)
-            {
-                <div class="text-muted small">No recent found items.</div>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-@foreach (var f in Model.RecentFound)
-{
-    <li class="list-group-item small d-flex justify-content-between">
-        <div>
-            <div class="fw-semibold">@Trunc(f.Description, 60)</div>
-            <div class="text-muted">Where: @(!string.IsNullOrWhiteSpace(f.FoundLocation) ? f.FoundLocation : "-")</div>
-        </div>
-        <div class="text-end">@f.DateFound.ToShortDateString()</div>
-    </li>
-}
-                </ul>
-            }
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Lost &amp; Found</div>
+      <ul class="list-group list-group-flush">
+      @foreach (var f in Model.RecentFound)
+      {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">@f.Item</div>
+            <div class="small text-muted">@f.Location</div>
           </div>
-          <div class="col">
-            <div class="fw-semibold mb-2">Lost</div>
-            @if (Model.RecentLost.Count == 0)
-            {
-                <div class="text-muted small">No recent lost items.</div>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-@foreach (var l in Model.RecentLost)
-{
-    <li class="list-group-item small d-flex justify-content-between">
-        <div>
-            <div class="fw-semibold">@Trunc(l.Description, 60)</div>
-            <div class="text-muted">Where: @(!string.IsNullOrWhiteSpace(l.LostLocation) ? l.LostLocation : "-")</div>
-        </div>
-        <div class="text-end">@l.DateReportedLost.ToShortDateString()</div>
-    </li>
-}
-                </ul>
-            }
+          <div class="small">@f.CreatedAt.ToLocalTime().ToString("g")</div>
+        </li>
+      }
+      @foreach (var l in Model.RecentLost)
+      {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <div class="fw-semibold">@l.Item</div>
+            <div class="small text-muted">@l.Location</div>
           </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-12">
-    <div class="card shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Upcoming Events</strong>
-        <a class="btn btn-sm btn-outline-secondary" asp-page="/Calendar/Index">Open Calendar</a>
-      </div>
-      <div class="card-body">
-        @if (Model.UpcomingEvents.Count == 0)
-        {
-            <div class="text-muted">No upcoming events.</div>
-        }
-        else
-        {
-            <ul class="list-group list-group-flush">
-@foreach (var e in Model.UpcomingEvents)
-{
-    <li class="list-group-item d-flex justify-content-between">
-      <div>
-        <div class="fw-semibold">@e.EventName</div>
-        <div class="small text-muted">@e.EventType</div>
-      </div>
-      <div class="text-end small">
-        <div>@e.StartDate.ToLocalTime().ToString("g")</div>
-        <div>@(e.EndDate.HasValue ? e.EndDate.Value.ToLocalTime().ToString("g") : "-")</div>
-      </div>
-    </li>
-}
-            </ul>
-        }
-      </div>
+          <div class="small">@l.CreatedAt.ToLocalTime().ToString("g")</div>
+        </li>
+      }
+      </ul>
     </div>
   </div>
 </div>

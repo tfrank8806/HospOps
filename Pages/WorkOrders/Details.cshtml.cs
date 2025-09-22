@@ -1,9 +1,9 @@
-// File: HospOps/Pages/WorkOrders/Details.cshtml.cs
+// File: Pages/WorkOrders/Details.cshtml.cs
 using HospOps.Data;
 using HospOps.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 
 namespace HospOps.Pages.WorkOrders
 {
@@ -13,13 +13,14 @@ namespace HospOps.Pages.WorkOrders
         private readonly HospOpsContext _db;
         public DetailsModel(HospOpsContext db) => _db = db;
 
-        public WorkOrder? Order { get; private set; }
+        public WorkOrder Item { get; private set; } = default!;
 
-        public async Task<IActionResult> OnGet(int id)
+        public async Task OnGetAsync(int id)
         {
-            Order = await _db.WorkOrders.FindAsync(id);
-            if (Order == null) return NotFound();
-            return Page();
+            Item = await _db.WorkOrders
+                .Include(w => w.AssignedDepartment)
+                .Include(w => w.StatusRef)
+                .FirstOrDefaultAsync(w => w.Id == id) ?? new WorkOrder();
         }
     }
 }

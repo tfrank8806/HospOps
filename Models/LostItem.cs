@@ -1,4 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// ============================================================================
+// File: Models/LostItem.cs   (REPLACE ENTIRE FILE)
+// Back-compat shims for: LostLocation, GuestName, DateReportedLost, ItemLost
+// ============================================================================
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HospOps.Models
 {
@@ -6,38 +11,56 @@ namespace HospOps.Models
     {
         public int Id { get; set; }
 
-        [MaxLength(80)]
-        public string? LostLocation { get; set; }
+        [Required, StringLength(120)]
+        public string Item { get; set; } = string.Empty;
 
-        public DateTime? GuestStayStart { get; set; }
-        public DateTime? GuestStayEnd { get; set; }
+        [StringLength(80)]
+        public string? Location { get; set; }
 
-        // Stored non-null; defaulted to today when empty on the form.
-        public DateTime DateReportedLost { get; set; }
-
-        [MaxLength(120)]
-        public string? GuestName { get; set; }
-
-        [MaxLength(40)]
-        public string? Phone { get; set; }
-
-        [MaxLength(200)]
-        [EmailAddress] // Optional; only validated if provided
-        public string? Email { get; set; }
-
-        [MaxLength(300)]
-        public string? Address { get; set; }
-
-        [MaxLength(2000)]
+        [StringLength(1000)]
         public string? Description { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+        // Optional department routing
+        public int? DepartmentId { get; set; }
+        public Department? Department { get; set; }
+
+        // Guest-facing info (referenced by pages)
+        [StringLength(120)]
+        public string? GuestName { get; set; }
+
+        // System timestamps
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        [MaxLength(120)]
-        public string? UpdatedBy { get; set; }
+        [StringLength(100)] public string? CreatedBy { get; set; }
+        [StringLength(100)] public string? UpdatedBy { get; set; }
 
-        public bool IsDeleted { get; set; }
-        public DateTime? DeletedAt { get; set; }
+        // ----------------------------
+        // Back-compat alias properties
+        // ----------------------------
+
+        /// <summary>Alias for Item (legacy pages)</summary>
+        [NotMapped]
+        public string ItemLost
+        {
+            get => Item;
+            set => Item = value;
+        }
+
+        /// <summary>Alias for Location (legacy pages)</summary>
+        [NotMapped]
+        public string? LostLocation
+        {
+            get => Location;
+            set => Location = value;
+        }
+
+        /// <summary>Alias that maps to CreatedAt (legacy pages)</summary>
+        [NotMapped]
+        public DateTime DateReportedLost
+        {
+            get => CreatedAt;
+            set => CreatedAt = value;
+        }
     }
 }
